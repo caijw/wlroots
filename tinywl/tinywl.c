@@ -23,6 +23,17 @@
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
 
+/*
+begin_interactive 记录开始用鼠标进行 move/resize surface的起始状态
+
+cursor 移动过程中，如果是 move ，进入 process_cursor_move ；如果是 resize ，进入 process_cursor_resize 。
+
+process_cursor_move ：更新 view 的 x，y 坐标
+
+process_cursor_resize ：更新 view 的x，y 坐标，同时更新 width 和 height。
+
+*/
+
 /* For brevity's sake, struct members are annotated where they are used. */
 enum tinywl_cursor_mode {
 	TINYWL_CURSOR_PASSTHROUGH,
@@ -399,11 +410,13 @@ static void process_cursor_resize(struct tinywl_server *server, uint32_t time) {
 		}
 	}
 
+	/// 更新 view 的 x 和 y 坐标
 	struct wlr_box geo_box;
 	wlr_xdg_surface_get_geometry(view->xdg_surface, &geo_box);
 	view->x = new_left - geo_box.x;
 	view->y = new_top - geo_box.y;
 
+	// 更新 view 的宽高
 	int new_width = new_right - new_left;
 	int new_height = new_bottom - new_top;
 	wlr_xdg_toplevel_set_size(view->xdg_surface, new_width, new_height);
